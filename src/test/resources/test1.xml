@@ -4,4 +4,8 @@
   <from>Jani</from>
   <heading>Reminder</heading>
   <body>Don't forget me this weekend!</body>
+  <contact>
+    <name>Jani D</name>
+    <phone>12-3456 7890</phone>
+  </contact>
 </note>

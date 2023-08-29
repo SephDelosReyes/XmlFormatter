@@ -1,4 +1,16 @@
+plugins {
+    id 'application'
+}
+
 apply plugin: 'java'
+
+ext {
+   javaMainClass = "com.formatter.FormatterApplication"
+}
+
+application {
+    mainClassName = javaMainClass
+}
 
 repositories {
     mavenCentral()
