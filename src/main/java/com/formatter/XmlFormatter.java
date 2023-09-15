@@ -8,7 +8,6 @@ import java.util.List;
 import static com.formatter.util.FormatterConstants.*;
 
 public class XmlFormatter {
-
     public XmlFormatter() {
     }
 
@@ -38,50 +37,64 @@ public class XmlFormatter {
         // Decomposition step to place each known section to a List
         List<String> decomposedStringList = new ArrayList<String>();
         char[] charArray = collapsedString.toCharArray();
-        String slice = "";
-        String sliceState = "INIT";
+        String tagSlice = "";
+        String valSlice = "";
+
+        int i = 0;
+        int peek = 0;
+
         System.out.println(collapsedString);
-        for (int i = 0; i < charArray.length; i++) {
-            // System.out.println(String.valueOf(charArray[i]));
-            // char open
-            if (charArray[i] == OPEN_TAG_CHAR
-                    && (sliceState == SLICE_STATE_INIT
-                            || sliceState == SLICE_STATE_CLOSED)) {
-                sliceState = SLICE_STATE_OPEN;
-                slice = slice + String.valueOf(charArray[i]);
-                decomposedStringList.add(slice);
+        while (i < charArray.length) {
+            if (charArray[i] == OPEN_TAG_CHAR) {
+                // node and node close
+                peek = peekArray(charArray, END_TAG_CHAR, i);
+                tagSlice = storeSlice(charArray, i + 1, peek);
+                System.out.println("tagSlice: " + tagSlice);
+                // must reset i to the peek result and go to next iter
+                i = peek;
+                continue;
             }
-            // // tag closing
-            // if (charArray[i] == CLOSE_TAG_CHAR
-            // && sliceState == SLICE_STATE_OPEN) {
-            // decomposedStringList.add(slice);
-            // slice = "";
-            // sliceState = SLICE_STATE_CLOSED;
-            // }
-            // // char is a value
-            // if (charArray[i] != CLOSE_TAG_CHAR
-            // && charArray[i] != OPEN_TAG_CHAR
-            // && sliceState == SLICE_STATE_CLOSED) {
-            // slice.concat(String.valueOf(charArray[i]));
-            // if (i + 1 > charArray.length) {
-            // if (charArray[i + 1] == OPEN_TAG_CHAR) {
-            // decomposedStringList.add(slice);
-            // slice = "";
-            // }
-            // }
-            // }
-            // // char tag text
-            // if (charArray[i] != CLOSE_TAG_CHAR
-            // && charArray[i] != OPEN_TAG_CHAR
-            // && sliceState == SLICE_STATE_OPEN) {
-            // slice.concat(String.valueOf(charArray[i]));
-            // }
 
-        }
-        for (String stringSlice : decomposedStringList) {
-            System.out.println(stringSlice + "\n");
-        }
+            // value
+            if (charArray[i] == END_TAG_CHAR && i + 1 < charArray.length) {
+                peek = peekArray(charArray, OPEN_TAG_CHAR, i);
+                valSlice = storeSlice(charArray, i + 1, peek); // can return blank slice, means that's next node
 
+                System.out.println("valSlice: " + valSlice);
+                i = peek;
+                continue;
+            }
+
+            // idk just loop it none of the above case
+            i++;
+        }
+        // for (String stringSlice : decomposedStringList) {
+        // System.out.println(stringSlice + "\n");
+        // }
+
+    }
+
+    // <?xml version="1.0"
+    // encoding="UTF-8"?><note><to>Tove</to><from>Jani</from><heading>Reminder</heading><body>Don't
+    // forget me this weekend!</body><contact><name>Jani D</name><phone>12-3456
+    // 7890</phone></contact></note>
+    // store buffer until end - 1;
+    private String storeSlice(char[] charArray, int startPos, int endPos) {
+        String slice = "";
+        int idx = startPos;
+        while (idx < endPos) {
+            slice = slice + String.valueOf(charArray[idx]);
+            idx++;
+        }
+        return slice;
+    }
+
+    // peek from current idx
+    private int peekArray(char[] charArray, char findingChar, int idx) {
+        while (charArray[idx] != findingChar) {
+            idx++;
+        }
+        return idx;
     }
 
     public void rebuildXml() {
@@ -92,5 +105,4 @@ public class XmlFormatter {
         // }
         // }
     }
-
 }
