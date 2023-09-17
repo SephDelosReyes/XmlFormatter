@@ -1,7 +1,8 @@
 package com.formatter.model;
 
 public class Node {
-    private String parentHashkey;
+    private String parentHashkey = "";
+    private String ownHashkey;
     private String nodeTag;
     private String nodeValue;
     private String nodeProps; // later implementation for tag props
@@ -36,6 +37,14 @@ public class Node {
 
     public void setNodeTag(String nodeTag) {
         this.nodeTag = nodeTag;
+    }
+
+    public String getOwnHashkey() {
+        return ownHashkey;
+    }
+
+    public void setOwnHashkey(String ownHashkey) {
+        this.ownHashkey = ownHashkey;
     }
 
 }
