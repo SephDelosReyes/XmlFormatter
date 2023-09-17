@@ -1,11 +1,10 @@
 package com.formatter.model;
 
 public class Node {
-
-    private String ownHashKey;
-    private String childHashKey;
     private String parentHashkey;
+    private String nodeTag;
     private String nodeValue;
+    private String nodeProps; // later implementation for tag props
 
     public String getNodeValue() {
         return nodeValue;
@@ -15,28 +14,28 @@ public class Node {
         this.nodeValue = nodeValue;
     }
 
-    public String getOwnHashKey() {
-        return ownHashKey;
-    }
-
-    public void setOwnHashKey(String ownHashKey) {
-        this.ownHashKey = ownHashKey;
-    }
-
-    public String getChildHashKey() {
-        return childHashKey;
-    }
-
-    public void setChildHashKey(String childHashKey) {
-        this.childHashKey = childHashKey;
-    }
-
     public String getParentHashkey() {
         return parentHashkey;
     }
 
     public void setParentHashkey(String parentHashkey) {
         this.parentHashkey = parentHashkey;
+    }
+
+    public String getNodeProps() {
+        return nodeProps;
+    }
+
+    public void setNodeProps(String nodeProps) {
+        this.nodeProps = nodeProps;
+    }
+
+    public String getNodeTag() {
+        return nodeTag;
+    }
+
+    public void setNodeTag(String nodeTag) {
+        this.nodeTag = nodeTag;
     }
 
 }

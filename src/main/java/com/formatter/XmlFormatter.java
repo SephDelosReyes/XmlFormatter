@@ -1,7 +1,6 @@
 package com.formatter;
 
 import com.formatter.model.Node;
-import com.formatter.model.Tree;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,34 +21,35 @@ public class XmlFormatter {
 
     public void parse(String bufferString) {
         // Do most of the manipulation here
-        decomposeString(collapseString(bufferString));
-        // rebuildXml();
+        var mainList = decomposeString(collapseString(bufferString));
+        rebuildXml(mainList);
     }
 
     public String collapseString(String bufferString) {
-        String collapsed = bufferString.replace(TAB_CHAR, "");
-        collapsed = collapsed.replace(NEW_LINE_CHAR, "");
+        String collapsed = bufferString.replace(TAB_CHAR, EMPTY);
+        collapsed = collapsed.replace(NEW_LINE_CHAR, EMPTY);
         collapsed = collapsed.replaceAll("\\s*(\\<)", "$1");
         return collapsed;
     }
 
-    public void decomposeString(String collapsedString) {
+    public List<String> decomposeString(String collapsedString) {
         // Decomposition step to place each known section to a List
-        List<String> decomposedStringList = new ArrayList<String>();
+        List<String> mainList = new ArrayList<>();
+
         char[] charArray = collapsedString.toCharArray();
-        String tagSlice = "";
-        String valSlice = "";
+        String tagSlice = EMPTY;
+        String valSlice = EMPTY;
 
         int i = 0;
         int peek = 0;
 
-        System.out.println(collapsedString);
         while (i < charArray.length) {
             if (charArray[i] == OPEN_TAG_CHAR) {
                 // node and node close
                 peek = peekArray(charArray, END_TAG_CHAR, i);
                 tagSlice = storeSlice(charArray, i + 1, peek);
-                System.out.println("tagSlice: " + tagSlice);
+                // add new node
+                mainList.add(tagSlice);
                 // must reset i to the peek result and go to next iter
                 i = peek;
                 continue;
@@ -59,8 +59,9 @@ public class XmlFormatter {
             if (charArray[i] == END_TAG_CHAR && i + 1 < charArray.length) {
                 peek = peekArray(charArray, OPEN_TAG_CHAR, i);
                 valSlice = storeSlice(charArray, i + 1, peek); // can return blank slice, means that's next node
-
-                System.out.println("valSlice: " + valSlice);
+                if (!valSlice.isBlank()) {
+                    mainList.add(valSlice);
+                }
                 i = peek;
                 continue;
             }
@@ -68,19 +69,13 @@ public class XmlFormatter {
             // idk just loop it none of the above case
             i++;
         }
-        // for (String stringSlice : decomposedStringList) {
-        // System.out.println(stringSlice + "\n");
-        // }
+
+        return mainList;
 
     }
 
-    // <?xml version="1.0"
-    // encoding="UTF-8"?><note><to>Tove</to><from>Jani</from><heading>Reminder</heading><body>Don't
-    // forget me this weekend!</body><contact><name>Jani D</name><phone>12-3456
-    // 7890</phone></contact></note>
-    // store buffer until end - 1;
     private String storeSlice(char[] charArray, int startPos, int endPos) {
-        String slice = "";
+        String slice = EMPTY;
         int idx = startPos;
         while (idx < endPos) {
             slice = slice + String.valueOf(charArray[idx]);
@@ -97,12 +92,75 @@ public class XmlFormatter {
         return idx;
     }
 
-    public void rebuildXml() {
-        // char[] charArray = bufferString.toCharArray();
-        // for (char character : charArray) {
-        // if (character == OPEN_TAG_CHAR) {
-        // System.out.println("Hello char" + character);
-        // }
-        // }
+    public void rebuildXml(List<String> mainList) {
+
+        int i = 0;
+        List<Node> nodeList = new ArrayList<>();
+
+        while (i < mainList.size()) {
+            if (mainList.get(i).contains("xml")) {
+                // skip xml def handling for now
+                i++;
+                continue;
+            }
+            // node
+            if (!mainList.get(i).contains(String.valueOf(CLOSE_TAG_CHAR))
+                    && !mainList.get(i + 1).contains(String.valueOf(CLOSE_TAG_CHAR))) {
+                System.out.println("new node: " + mainList.get(i));
+                Node tagNode = new Node();
+                // assign own hash also for parent referencing. ?
+                tagNode.setNodeTag(mainList.get(i));
+                nodeList.add(tagNode);
+            }
+            // value
+            if (!mainList.get(i).contains(String.valueOf(CLOSE_TAG_CHAR))
+                    && mainList.get(i + 1).contains(String.valueOf(CLOSE_TAG_CHAR))) {
+                System.out.println(String.format("value to i-1 node: %s, %s ", mainList.get(i - 1), mainList.get(i)));
+                // appendNodeValue(nodeList, mainList.get(i - 1), mainList.get(i));
+            }
+            // end tag handling
+            if (mainList.get(i).contains(String.valueOf(CLOSE_TAG_CHAR))) {
+                // find parent
+                System.out.println("close node: " + mainList.get(i));
+                // findParentNode(nodeList, mainList.get(i));
+            }
+            i++;
+        }
+        // check
+        for (Node node : nodeList) {
+            System.out.println(
+                    String.format("Node Tag %s, Value %s, hash %s",
+                            node.getNodeTag(),
+                            node.getNodeValue(),
+                            node.getParentHashkey()));
+        }
+    }
+
+    private void appendNodeValue(List<Node> nodeList, String nodeTag, String nodeValue) {
+        for (Node node : nodeList) {
+            if (nodeTag.equals(node.getNodeTag())) {
+                node.setNodeValue(nodeValue);
+            }
+        }
+    }
+
+    private void appendNodeParent(List<Node> nodeList, String nodeTag, String nodeParentHash) {
+        for (Node node : nodeList) {
+            if (nodeTag.equals(node.getNodeTag())) {
+                node.setParentHashkey(nodeParentHash);
+            }
+        }
+    }
+
+    private void findParentNode(List<Node> nodeList, String nodeTag) {
+        // go backwards which is the last Node to not have the same tag and no parent
+        // yet.
+        for (int i = nodeList.size(); i >= 0; i--) {
+            if (!nodeList.get(i).getNodeTag().equals(nodeTag.replace("/", EMPTY))
+                    && nodeList.get(i).getParentHashkey().isBlank()) {
+                appendNodeParent(nodeList, nodeTag, String.valueOf(nodeList.get(i).hashCode()));
+            }
+
+        }
     }
 }
