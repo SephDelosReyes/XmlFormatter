@@ -123,7 +123,7 @@ public class XmlFormatter {
             if (mainList.get(i).contains(String.valueOf(CLOSE_TAG_CHAR))) {
                 // find parent
                 System.out.println("close node: " + mainList.get(i));
-                // findParentNode(nodeList, mainList.get(i));
+                findParentNode(nodeList, mainList.get(i));
             }
             i++;
         }
@@ -149,7 +149,10 @@ public class XmlFormatter {
 
     private void appendNodeParent(List<Node> nodeList, String nodeTag, String nodeParentHash) {
         for (Node node : nodeList) {
-            if (nodeTag.equals(node.getNodeTag().replace("/", EMPTY))) {
+            System.out.println(
+                    String.format("appending node %s with parenthash %s: ", node.getNodeTag(), nodeParentHash));
+            if (nodeTag.replace("/", EMPTY).equals(node.getNodeTag())) {
+                System.out.println("HERE: " + node.getNodeTag());
                 node.setParentHashkey(nodeParentHash);
                 break;
             }
@@ -159,10 +162,13 @@ public class XmlFormatter {
     private void findParentNode(List<Node> nodeList, String nodeTag) {
         // go backwards which is the last Node to not have the same tag and no parent
         // yet.
-        for (int i = nodeList.size() - 1; i > 0; i--) {
+        // System.out.println("node tag finding parent: " + nodeTag);
+        for (int i = nodeList.size() - 1; i >= 0; i--) {
+            // System.out.println("node trying: " + nodeList.get(i).getNodeTag());
             if (!nodeList.get(i).getNodeTag().equals(nodeTag.replace("/", EMPTY))
                     && nodeList.get(i).getParentHashkey().isBlank()) {
                 System.out.println("append try: " + nodeList.get(i).getNodeTag());
+                // nodeList.get(i).setParentHashkey(nodeTag);
                 appendNodeParent(nodeList, nodeTag, nodeList.get(i).getOwnHashkey());
                 break;
             }
