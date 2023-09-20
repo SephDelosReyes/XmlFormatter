@@ -5,6 +5,7 @@ public class FormatterConstants {
     public static final char END_TAG_CHAR = '>';
     public static final char CLOSE_TAG_CHAR = '/';
     public static final String TAB_CHAR = "\t";
+    public static final String SPACE_CHAR = "\u0020\u0020";
     public static final String NEW_LINE_CHAR = "\n";
     public static final String SLICE_STATE_INIT = "INIT";
     public static final String SLICE_STATE_OPEN = "OPEN";

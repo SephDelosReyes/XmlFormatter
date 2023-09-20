@@ -25,8 +25,9 @@ public class XmlFormatter {
         rebuildXml(mainList);
     }
 
+    //@todo: preserve value characters
     public String collapseString(String bufferString) {
-        String collapsed = bufferString.replace(TAB_CHAR, EMPTY);
+        String collapsed = bufferString.replace(SPACE_CHAR, EMPTY);
         collapsed = collapsed.replace(NEW_LINE_CHAR, EMPTY);
         collapsed = collapsed.replaceAll("\\s*(\\<)", "$1");
         return collapsed;
@@ -99,6 +100,8 @@ public class XmlFormatter {
 
         List<String> formattedList = new ArrayList<>();
 
+        String tabString = EMPTY;
+
         while (i < mainList.size()) {
             if (mainList.get(i).contains("xml")) {
                 // skip xml def handling for now
@@ -109,9 +112,14 @@ public class XmlFormatter {
             // node
             if (!mainList.get(i).contains(String.valueOf(CLOSE_TAG_CHAR))
                     && !mainList.get(i + 1).contains(String.valueOf(CLOSE_TAG_CHAR))) {
+
+                if (i > 1 && !formattedList.get(formattedList.size()-1).contains(String.valueOf(CLOSE_TAG_CHAR))) {
+                    //only start adding the tabs post first non-xml prolog node
+                    tabString = tabString.concat(SPACE_CHAR);
+                }
                 System.out.println("new node: " + mainList.get(i));
                 //only add new nodes, don't care for value append and append due to close
-                formattedList.add(OPEN_TAG_CHAR + mainList.get(i) + END_TAG_CHAR);
+                formattedList.add(tabString + OPEN_TAG_CHAR + mainList.get(i) + END_TAG_CHAR);
 
                 // Node tagNode = new Node();
                 // assign own hash also for parent referencing. ?
@@ -134,7 +142,12 @@ public class XmlFormatter {
 
                 //is previous close node, then dont append
                 if (mainList.get(i-1).contains(String.valueOf(CLOSE_TAG_CHAR))) {
-                    formattedList.add(OPEN_TAG_CHAR + mainList.get(i) + END_TAG_CHAR);
+                    if (i > 1 && formattedList.get(formattedList.size()-1).contains(String.valueOf(CLOSE_TAG_CHAR))) {
+                        //only start adding the tabs post first non-xml prolog node
+                        System.out.println("tabs: " + i);
+                        tabString = tabString.replaceFirst(SPACE_CHAR, "");
+                    }
+                    formattedList.add(tabString + OPEN_TAG_CHAR + mainList.get(i) + END_TAG_CHAR);
                 } else {
                     //append like a value node
                     var valueOverwrite =  formattedList.get(formattedList.size() - 1) + OPEN_TAG_CHAR + mainList.get(i) + END_TAG_CHAR;
@@ -148,52 +161,4 @@ public class XmlFormatter {
         for (String string : formattedList) {
             System.out.println(string);
         }
-
-        // for (Node node : nodeList) {
-        //     System.out.println(
-        //             String.format("Node Tag %s, Value %s, phash %s, ohash %s",
-        //                     node.getNodeTag(),
-        //                     node.getNodeValue(),
-        //                     node.getParentHashkey(),
-        //                     node.getOwnHashkey()));
-        // }
-    }
-
-    private void appendNodeValue(List<Node> nodeList, String nodeTag, String nodeValue) {
-        for (Node node : nodeList) {
-            if (nodeTag.equals(node.getNodeTag())) {
-                node.setNodeValue(nodeValue);
-                break;
-            }
-        }
-    }
-
-    private void appendNodeParent(List<Node> nodeList, String nodeTag, String nodeParentHash) {
-        for (Node node : nodeList) {
-            System.out.println(
-                    String.format("appending node %s with parenthash %s: ", node.getNodeTag(), nodeParentHash));
-            if (nodeTag.replace("/", EMPTY).equals(node.getNodeTag())) {
-                System.out.println("HERE: " + node.getNodeTag());
-                node.setParentHashkey(nodeParentHash);
-                break;
-            }
-        }
-    }
-
-    private void findParentNode(List<Node> nodeList, String nodeTag) {
-        // go backwards which is the last Node to not have the same tag and no parent
-        // yet.
-        // System.out.println("node tag finding parent: " + nodeTag);
-        for (int i = nodeList.size() - 1; i >= 0; i--) {
-            // System.out.println("node trying: " + nodeList.get(i).getNodeTag());
-            if (!nodeList.get(i).getNodeTag().equals(nodeTag.replace("/", EMPTY))
-                    && nodeList.get(i).getParentHashkey().isBlank()) {
-                System.out.println("append try: " + nodeList.get(i).getNodeTag());
-                // nodeList.get(i).setParentHashkey(nodeTag);
-                appendNodeParent(nodeList, nodeTag, nodeList.get(i).getOwnHashkey());
-                break;
-            }
-
-        }
-    }
 }
