@@ -95,11 +95,14 @@ public class XmlFormatter {
     public void rebuildXml(List<String> mainList) {
 
         int i = 0;
-        List<Node> nodeList = new ArrayList<>();
+        // List<Node> nodeList = new ArrayList<>();
+
+        List<String> formattedList = new ArrayList<>();
 
         while (i < mainList.size()) {
             if (mainList.get(i).contains("xml")) {
                 // skip xml def handling for now
+                formattedList.add(OPEN_TAG_CHAR + mainList.get(i) + END_TAG_CHAR);
                 i++;
                 continue;
             }
@@ -107,35 +110,53 @@ public class XmlFormatter {
             if (!mainList.get(i).contains(String.valueOf(CLOSE_TAG_CHAR))
                     && !mainList.get(i + 1).contains(String.valueOf(CLOSE_TAG_CHAR))) {
                 System.out.println("new node: " + mainList.get(i));
-                Node tagNode = new Node();
+                //only add new nodes, don't care for value append and append due to close
+                formattedList.add(OPEN_TAG_CHAR + mainList.get(i) + END_TAG_CHAR);
+
+                // Node tagNode = new Node();
                 // assign own hash also for parent referencing. ?
-                tagNode.setNodeTag(mainList.get(i));
-                tagNode.setOwnHashkey(String.valueOf(tagNode.hashCode()));
-                nodeList.add(tagNode);
+                // tagNode.setNodeTag(mainList.get(i));
+                // tagNode.setOwnHashkey(String.valueOf(tagNode.hashCode()));
+                // nodeList.add(tagNode);
             }
             // value
             if (!mainList.get(i).contains(String.valueOf(CLOSE_TAG_CHAR))
                     && mainList.get(i + 1).contains(String.valueOf(CLOSE_TAG_CHAR))) {
                 System.out.println(String.format("value to i-1 node: %s, %s ", mainList.get(i - 1), mainList.get(i)));
-                appendNodeValue(nodeList, mainList.get(i - 1), mainList.get(i));
+                var valueOverwrite =  formattedList.get(formattedList.size() - 1) + mainList.get(i);
+                formattedList.set(formattedList.size() - 1, valueOverwrite);
+                // appendNodeValue(nodeList, mainList.get(i - 1), mainList.get(i));
             }
             // end tag handling
             if (mainList.get(i).contains(String.valueOf(CLOSE_TAG_CHAR))) {
                 // find parent
                 System.out.println("close node: " + mainList.get(i));
-                findParentNode(nodeList, mainList.get(i));
+
+                //is previous close node, then dont append
+                if (mainList.get(i-1).contains(String.valueOf(CLOSE_TAG_CHAR))) {
+                    formattedList.add(OPEN_TAG_CHAR + mainList.get(i) + END_TAG_CHAR);
+                } else {
+                    //append like a value node
+                    var valueOverwrite =  formattedList.get(formattedList.size() - 1) + OPEN_TAG_CHAR + mainList.get(i) + END_TAG_CHAR;
+                    formattedList.set(formattedList.size() - 1, valueOverwrite);
+                }
+                // findParentNode(nodeList, mainList.get(i));
             }
             i++;
         }
         // check
-        for (Node node : nodeList) {
-            System.out.println(
-                    String.format("Node Tag %s, Value %s, phash %s, ohash %s",
-                            node.getNodeTag(),
-                            node.getNodeValue(),
-                            node.getParentHashkey(),
-                            node.getOwnHashkey()));
+        for (String string : formattedList) {
+            System.out.println(string);
         }
+
+        // for (Node node : nodeList) {
+        //     System.out.println(
+        //             String.format("Node Tag %s, Value %s, phash %s, ohash %s",
+        //                     node.getNodeTag(),
+        //                     node.getNodeValue(),
+        //                     node.getParentHashkey(),
+        //                     node.getOwnHashkey()));
+        // }
     }
 
     private void appendNodeValue(List<Node> nodeList, String nodeTag, String nodeValue) {
